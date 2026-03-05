@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Red Points · CSM Mastermind</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --red:#E8281A;--red-dark:#B01E12;--red-glow:rgba(232,40,26,0.13);
+  --bg:#0A0A0B;--bg2:#111113;--bg3:#18181C;--bg4:#202025;--surface:#1E1E24;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#F0EEE8;--muted:#8A8880;--dim:#4A4846;
+  --gold:#D4A843;--gold-l:#F0C96A;--teal:#1ABCB0;--purple:#8B5CF6;
+  --green:#22C55E;--orange:#F97316;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:.35}
+
+/* SIDEBAR */
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:268px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100;overflow-y:auto}
+.sb-logo{padding:24px 20px 18px;border-bottom:1px solid var(--border)}
+.logo-row{display:flex;align-items:center;gap:10px;margin-bottom:5px}
+.logo-sq{width:30px;height:30px;background:var(--red);border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:#fff;flex-shrink:0}
+.logo-txt{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--text);letter-spacing:-.2px}
+.logo-sub{font-size:10px;color:var(--dim);font-family:'JetBrains Mono',monospace;letter-spacing:.4px}
+.sb-nav{flex:1;padding:10px 0}
+.nav-label{padding:14px 20px 5px;font-size:9.5px;font-family:'JetBrains Mono',monospace;color:var(--dim);letter-spacing:1.4px;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 20px;cursor:pointer;transition:all .14s;border-left:2px solid transparent;color:var(--muted);font-size:12.5px;text-decoration:none}
+.nav-item:hover{background:rgba(255,255,255,.03);color:var(--text);border-left-color:var(--border2)}
+.nav-item.active{background:var(--red-glow);color:var(--text);border-left-color:var(--red);font-weight:500}
+.nav-ico{font-size:13px;flex-shrink:0}
+.sb-foot{padding:14px 20px;border-top:1px solid var(--border);font-size:10.5px;color:var(--dim);font-family:'JetBrains Mono',monospace}
+
+/* MAIN */
+.main{margin-left:268px;min-height:100vh}
+
+/* HERO */
+.hero{padding:56px 52px 44px;background:linear-gradient(135deg,var(--bg) 0%,var(--bg2) 100%);border-bottom:1px solid var(--border);position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-60px;right:-60px;width:360px;height:360px;background:radial-gradient(circle,rgba(232,40,26,.07) 0%,transparent 70%);pointer-events:none}
+.eyebrow{display:inline-flex;align-items:center;gap:7px;background:var(--red-glow);border:1px solid rgba(232,40,26,.28);border-radius:100px;padding:4px 13px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--red);letter-spacing:.4px;margin-bottom:22px}
+.hero h1{font-family:'Syne',sans-serif;font-weight:800;font-size:46px;line-height:1.06;letter-spacing:-1.4px;color:var(--text);max-width:600px;margin-bottom:14px}
+.hero h1 span{color:var(--red)}
+.hero-sub{font-size:15px;color:var(--muted);max-width:500px;line-height:1.65;margin-bottom:34px;font-weight:300}
+.hero-stats{display:flex;gap:36px}
+.stat-num{font-family:'Syne',sans-serif;font-weight:700;font-size:26px;color:var(--text);letter-spacing:-.4px}
+.stat-lbl{font-size:11px;color:var(--dim);font-family:'JetBrains Mono',monospace}
+
+/* CONTENT */
+.content{padding:44px 52px;max-width:1080px}
+
+/* SECTIONS */
+.section{display:none;animation:fadeUp .28s ease}
+.section.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+
+/* SECTION HEADER */
+.sec-tag{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--red);letter-spacing:1.4px;text-transform:uppercase;margin-bottom:7px}
+.sec-title{font-family:'Syne',sans-serif;font-weight:700;font-size:30px;letter-spacing:-.7px;color:var(--text);margin-bottom:10px}
+.sec-desc{font-size:14.5px;color:var(--muted);line-height:1.65;max-width:580px;font-weight:300;margin-bottom:32px}
+
+/* GRIDS */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:36px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:36px}
+
+/* PROMPT CARD */
+.pcard{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:18px;transition:all .18s}
+.pcard:hover{border-color:var(--border2);background:var(--bg3);transform:translateY(-1px)}
+.pc-num{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim);margin-bottom:7px}
+.pc-title{font-family:'Syne',sans-serif;font-weight:600;font-size:13.5px;color:var(--text);margin-bottom:9px;letter-spacing:-.15px}
+.pc-prompt{font-size:12px;color:var(--muted);line-height:1.55;background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:11px 12px;font-style:italic;margin-bottom:11px;position:relative}
+.pc-prompt::before{content:'"';position:absolute;top:-3px;left:9px;font-size:22px;color:var(--red);font-style:normal;line-height:1}
+.pc-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px}
+.tag{font-size:10px;padding:2px 7px;border-radius:100px;font-family:'JetBrains Mono',monospace;white-space:nowrap}
+.ti{background:rgba(212,168,67,.1);color:var(--gold);border:1px solid rgba(212,168,67,.2)}
+.to{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.2)}
+.tt{background:rgba(139,92,246,.1);color:var(--purple);border:1px solid rgba(139,92,246,.2)}
+.tu{background:rgba(232,40,26,.1);color:var(--red);border:1px solid rgba(232,40,26,.2)}
+.tp{background:rgba(26,188,176,.1);color:var(--teal);border:1px solid rgba(26,188,176,.2)}
+.copy-btn{display:flex;align-items:center;gap:5px;background:none;border:1px solid var(--border);color:var(--dim);padding:4px 10px;border-radius:5px;font-size:10.5px;font-family:'JetBrains Mono',monospace;cursor:pointer;transition:all .14s;margin-left:auto}
+.copy-btn:hover{border-color:var(--red);color:var(--red)}
+.copy-btn.copied{border-color:var(--green);color:var(--green)}
+
+/* PLAYBOOK CARD */
+.plcard{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:18px;transition:all .18s;cursor:default}
+.plcard:hover{border-color:var(--border2);transform:translateY(-1px)}
+.pl-icon{font-size:22px;margin-bottom:10px}
+.pl-title{font-family:'Syne',sans-serif;font-weight:600;font-size:13px;color:var(--text);margin-bottom:7px}
+.pl-desc{font-size:12px;color:var(--muted);line-height:1.55}
+
+/* TRICK BLOCK */
+.trick{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:18px 22px;margin-bottom:12px;display:flex;gap:14px;align-items:flex-start;transition:border-color .18s}
+.trick:hover{border-color:var(--border2)}
+.tr-icon{font-size:18px;flex-shrink:0;margin-top:2px}
+.tr-title{font-family:'Syne',sans-serif;font-weight:600;font-size:13.5px;color:var(--text);margin-bottom:5px}
+.tr-text{font-size:12.5px;color:var(--muted);line-height:1.6}
+.tr-text strong{color:var(--text);font-weight:500}
+.tr-code{margin-top:9px;background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:11px 13px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gold-l);line-height:1.65}
+
+/* SUPER PROMPT */
+.sp-box{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:28px;position:relative;overflow:hidden}
+.sp-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--red),var(--red-dark),transparent)}
+.sp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.sp-title{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;color:var(--text)}
+.sp-text{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--muted);line-height:1.75;white-space:pre-line}
+
+/* ALERT */
+.alert{border-radius:9px;padding:13px 16px;margin-bottom:14px;display:flex;gap:11px;align-items:flex-start}
+.al-red{background:rgba(232,40,26,.07);border:1px solid rgba(232,40,26,.2)}
+.al-gold{background:rgba(212,168,67,.07);border:1px solid rgba(212,168,67,.2)}
+.al-teal{background:rgba(26,188,176,.07);border:1px solid rgba(26,188,176,.2)}
+.al-purple{background:rgba(139,92,246,.07);border:1px solid rgba(139,92,246,.2)}
+.al-icon{font-size:15px;flex-shrink:0;margin-top:1px}
+.al-text{font-size:12.5px;line-height:1.6;color:var(--muted)}
+.al-text strong{color:var(--text);font-weight:500}
+
+/* WORKFLOW */
+.workflow{display:flex;flex-direction:column;margin-bottom:28px}
+.wf-step{display:flex;gap:18px;padding:18px 0;border-bottom:1px solid var(--border)}
+.wf-step:last-child{border-bottom:none}
+.step-num{width:30px;height:30px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;color:#fff;flex-shrink:0;margin-top:2px}
+.step-title{font-family:'Syne',sans-serif;font-weight:600;font-size:14px;color:var(--text);margin-bottom:5px}
+.step-text{font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:9px}
+.step-time{display:inline-flex;align-items:center;gap:4px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--teal);background:rgba(26,188,176,.08);border:1px solid rgba(26,188,176,.15);padding:2px 9px;border-radius:100px}
+
+/* MATRIX */
+.matrix{display:grid;grid-template-columns:1fr 1fr;gap:2px;border-radius:11px;overflow:hidden;border:1px solid var(--border);margin-bottom:28px}
+.mx-cell{padding:18px;background:var(--surface)}
+.mx-cell.mxh{background:var(--bg3);font-family:'Syne',sans-serif;font-weight:600;font-size:12px;color:var(--text);text-align:center;padding:11px}
+.mx-cell h4{font-family:'Syne',sans-serif;font-weight:600;font-size:12.5px;margin-bottom:7px}
+.mx-cell.q1 h4{color:var(--red)}.mx-cell.q2 h4{color:var(--orange)}.mx-cell.q3 h4{color:var(--gold)}.mx-cell.q4 h4{color:var(--dim)}
+.mx-cell ul{list-style:none;font-size:11.5px;color:var(--muted);line-height:1.65}
+.mx-cell ul li::before{content:'→ ';color:var(--dim)}
+
+/* TABLE */
+.cs-table{width:100%;border-collapse:collapse;margin-bottom:28px;font-size:12.5px}
+.cs-table th{background:var(--bg3);padding:10px 14px;text-align:left;font-family:'Syne',sans-serif;font-weight:600;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border)}
+.cs-table td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--muted);vertical-align:top;line-height:1.5}
+.cs-table tr:hover td{background:rgba(255,255,255,.02);color:var(--text)}
+.cs-table td:first-child{color:var(--text);font-weight:500;width:190px}
+.cs-table td code{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--gold-l);background:var(--bg2);padding:1px 5px;border-radius:4px}
+
+/* TOOLS */
+.tool-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:15px;text-decoration:none;transition:all .18s;display:block}
+.tool-card:hover{border-color:var(--border2);background:var(--bg3);transform:translateY(-1px)}
+.tc-cat{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px}
+.tc-name{font-family:'Syne',sans-serif;font-weight:600;font-size:12.5px;color:var(--text);margin-bottom:4px}
+.tc-desc{font-size:11px;color:var(--muted);line-height:1.5}
+
+/* BADGE */
+.badge{display:inline-flex;align-items:center;padding:1px 7px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:500}
+.br{background:rgba(232,40,26,.15);color:var(--red)}.bg{background:rgba(212,168,67,.15);color:var(--gold)}
+.bt{background:rgba(26,188,176,.15);color:var(--teal)}.bv{background:rgba(34,197,94,.15);color:var(--green)}
+.bp{background:rgba(139,92,246,.15);color:var(--purple)}
+
+/* PROGRESS */
+.prog-item{margin-bottom:12px}
+.prog-label{display:flex;justify-content:space-between;margin-bottom:5px;font-size:12px}
+.prog-bar{height:3px;background:var(--bg3);border-radius:100px;overflow:hidden}
+.prog-fill{height:100%;border-radius:100px;background:var(--red);transition:width .6s cubic-bezier(.4,0,.2,1)}
+
+/* ACCORDION */
+.acc{margin-bottom:10px}
+.acc-hdr{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:15px 18px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:all .18s;user-select:none}
+.acc-hdr:hover{border-color:var(--border2)}
+.acc-hdr.open{border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom-color:transparent}
+.acc-title{display:flex;align-items:center;gap:10px;font-family:'Syne',sans-serif;font-weight:600;font-size:13.5px;color:var(--text)}
+.acc-arr{color:var(--dim);transition:transform .2s;font-size:11px}
+.acc-hdr.open .acc-arr{transform:rotate(180deg)}
+.acc-body{display:none;background:var(--bg2);border:1px solid var(--border);border-top:none;border-bottom-left-radius:10px;border-bottom-right-radius:10px;padding:18px}
+.acc-body.open{display:block}
+
+/* DIVIDER */
+.div{height:1px;background:var(--border);margin:36px 0}
+
+/* H2/H3 in content */
+.content h2{font-family:'Syne',sans-serif;font-weight:700;font-size:19px;color:var(--text);margin-bottom:18px;letter-spacing:-.25px}
+.content h3{font-family:'Syne',sans-serif;font-weight:600;font-size:15px;color:var(--text);margin-bottom:12px}
+
+/* PULSE */
+.pulse{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:4px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.75)}}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:100px}
+
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);transition:transform .3s}.sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}.hero{padding:60px 22px 36px}.hero h1{font-size:30px}.content{padding:28px 22px}
+  .grid2,.grid3{grid-template-columns:1fr}.hero-stats{gap:20px}
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+  <div class="sb-logo">
+    <div class="logo-row">
+      <div class="logo-sq">RP</div>
+      <div class="logo-txt">CSM Mastermind</div>
+    </div>
+    <div class="logo-sub">Red Points · Strategic Toolkit · 2026</div>
+  </div>
+  <div class="sb-nav">
+    <div class="nav-label">START HERE</div>
+    <a class="nav-item active" onclick="show('home')" href="#"><span class="nav-ico">🏠</span>Home & Overview</a>
+    <a class="nav-item" onclick="show('setup')" href="#"><span class="nav-ico">🧠</span>Super Prompt Setup</a>
+    <a class="nav-item" onclick="show('qs')" href="#"><span class="nav-ico">⚡</span>5-Min Quickstart</a>
+    <div class="nav-label">DAILY WORKFLOWS</div>
+    <a class="nav-item" onclick="show('daily')" href="#"><span class="nav-ico">📅</span>Daily Automation</a>
+    <a class="nav-item" onclick="show('kpi')" href="#"><span class="nav-ico">📊</span>KPI & Data Mastery</a>
+    <a class="nav-item" onclick="show('comms')" href="#"><span class="nav-ico">💬</span>Communication Intel</a>
+    <div class="nav-label">STRATEGIC</div>
+    <a class="nav-item" onclick="show('churn')" href="#"><span class="nav-ico">🛡️</span>Churn Prevention</a>
+    <a class="nav-item" onclick="show('expansion')" href="#"><span class="nav-ico">🚀</span>Expansion & Upsell</a>
+    <a class="nav-item" onclick="show('qbr')" href="#"><span class="nav-ico">📈</span>QBR / EBR Master</a>
+    <a class="nav-item" onclick="show('stakeholder')" href="#"><span class="nav-ico">🧭</span>Stakeholder Navigation</a>
+    <div class="nav-label">ADVANCED</div>
+    <a class="nav-item" onclick="show('discovery')" href="#"><span class="nav-ico">🔍</span>Client Discovery</a>
+    <a class="nav-item" onclick="show('crisis')" href="#"><span class="nav-ico">🚨</span>Crisis Leadership</a>
+    <a class="nav-item" onclick="show('competitive')" href="#"><span class="nav-ico">⚔️</span>Competitive Intel</a>
+    <div class="nav-label">RESOURCES</div>
+    <a class="nav-item" onclick="show('playbooks')" href="#"><span class="nav-ico">📘</span>Playbooks</a>
+    <a class="nav-item" onclick="show('tools')" href="#"><span class="nav-ico">🔧</span>AI Tools Stack</a>
+    <a class="nav-item" onclick="show('tricks')" href="#"><span class="nav-ico">✨</span>Tips & Tricks</a>
+    <a class="nav-item" onclick="show('cheatsheet')" href="#"><span class="nav-ico">📋</span>Cheatsheet</a>
+  </div>
+  <div class="sb-foot"><span class="pulse"></span>AI won't replace CSMs.</div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+<div class="hero">
+  <div class="eyebrow"><span class="pulse"></span>CSM STRATEGIC TOOLKIT — RED POINTS</div>
+  <h1>Master every<br><span>CSM task</span><br>with AI.</h1>
+  <p class="hero-sub">A practical, prompt-ready toolkit for Red Points CSMs. Stop getting overwhelmed — start operating like a strategic advisor.</p>
+  <div class="hero-stats">
+    <div><div class="stat-num">19</div><div class="stat-lbl">SECTIONS</div></div>
+    <div><div class="stat-num">46+</div><div class="stat-lbl">COPY-READY PROMPTS</div></div>
+    <div><div class="stat-num">∞</div><div class="stat-lbl">LEVERAGE</div></div>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- ═══════════════ HOME ═══════════════ -->
+<div class="section active" id="home">
+  <div class="sec-tag">START HERE</div>
+  <div class="sec-title">Where to start</div>
+  <div class="sec-desc">Pick your situation. Go directly to the right tool. No wasted time.</div>
+
+  <div class="alert al-red">
+    <div class="al-icon">🔥</div>
+    <div class="al-text"><strong>First time?</strong> Start with <strong>Super Prompt Setup</strong> — paste it once into Claude or ChatGPT and it becomes your personal Red Points strategy advisor for the entire session.</div>
+  </div>
+
+  <h2>What do you need right now?</h2>
+  <div class="grid3">
+    <div class="plcard" onclick="show('daily')" style="border-color:rgba(232,40,26,.3);cursor:pointer">
+      <div class="pl-icon">📅</div><div class="pl-title">Plan my day fast</div>
+      <div class="pl-desc">Daily automation prompts — briefing, priority list, KPI pulse in under 10 min.</div>
+    </div>
+    <div class="plcard" onclick="show('churn')" style="border-color:rgba(232,40,26,.3);cursor:pointer">
+      <div class="pl-icon">🛡️</div><div class="pl-title">Account feels at risk</div>
+      <div class="pl-desc">Churn prevention, risk scoring, early warnings, re-engagement plans.</div>
+    </div>
+    <div class="plcard" onclick="show('qbr')" style="border-color:rgba(212,168,67,.3);cursor:pointer">
+      <div class="pl-icon">📈</div><div class="pl-title">QBR / EBR coming up</div>
+      <div class="pl-desc">Full QBR narrative, slide copy, economic impact storytelling.</div>
+    </div>
+    <div class="plcard" onclick="show('expansion')" style="border-color:rgba(26,188,176,.3);cursor:pointer">
+      <div class="pl-icon">🚀</div><div class="pl-title">Identify upsell opportunities</div>
+      <div class="pl-desc">Module proposals, ROI projections, executive expansion emails.</div>
+    </div>
+    <div class="plcard" onclick="show('comms')" style="border-color:rgba(139,92,246,.3);cursor:pointer">
+      <div class="pl-icon">💬</div><div class="pl-title">Need to write an email</div>
+      <div class="pl-desc">VP-level emails, renewal negotiation, escalation messages, follow-up sequences.</div>
+    </div>
+    <div class="plcard" onclick="show('crisis')" style="border-color:rgba(249,115,22,.3);cursor:pointer">
+      <div class="pl-icon">🚨</div><div class="pl-title">Something went wrong</div>
+      <div class="pl-desc">Crisis scripts, incident summaries, RCA for executives, stabilisation plans.</div>
+    </div>
+  </div>
+
+  <div class="div"></div>
+  <h2>Skill level — where to focus this week</h2>
+  <div class="prog-item">
+    <div class="prog-label"><span style="color:var(--muted)">Daily AI automation</span><span style="color:var(--text);font-family:'JetBrains Mono',monospace;font-size:11px">Start here</span></div>
+    <div class="prog-bar"><div class="prog-fill" style="width:100%;background:var(--green)"></div></div>
+  </div>
+  <div class="prog-item">
+    <div class="prog-label"><span style="color:var(--muted)">KPI storytelling & data interpretation</span><span style="color:var(--text);font-family:'JetBrains Mono',monospace;font-size:11px">Week 1</span></div>
+    <div class="prog-bar"><div class="prog-fill" style="width:80%;background:var(--teal)"></div></div>
+  </div>
+  <div class="prog-item">
+    <div class="prog-label"><span style="color:var(--muted)">Churn prevention & risk signals</span><span style="color:var(--text);font-family:'JetBrains Mono',monospace;font-size:11px">Week 2</span></div>
+    <div class="prog-bar"><div class="prog-fill" style="width:65%;background:var(--gold)"></div></div>
+  </div>
+  <div class="prog-item">
+    <div class="prog-label"><span style="color:var(--muted)">Executive communication</span><span style="color:var(--text);font-family:'JetBrains Mono',monospace;font-size:11px">Week 3</span></div>
+    <div class="prog-bar"><div class="prog-fill" style="width:50%;background:var(--orange)"></div></div>
+  </div>
+  <div class="prog-item">
+    <div class="prog-label"><span style="color:var(--muted)">Expansion & revenue growth</span><span style="color:var(--text);font-family:'JetBrains Mono',monospace;font-size:11px">Month 2</span></div>
+    <div class="prog-bar"><div class="prog-fill" style="width:35%;background:var(--red)"></div></div>
+  </div>
+  <div class="prog-item">
+    <div class="prog-label"><span style="color:var(--muted)">Strategic governance & crisis leadership</span><span style="color:var(--text);font-family:'JetBrains Mono',monospace;font-size:11px">Advanced</span></div>
+    <div class="prog-bar"><div class="prog-fill" style="width:18%;background:var(--purple)"></div></div>
+  </div>
+</div>
+
+<!-- ═══════════════ SETUP ═══════════════ -->
+<div class="section" id="setup">
+  <div class="sec-tag">SECTION 1 — SETUP</div>
+  <div class="sec-title">Super Prompt Setup</div>
+  <div class="sec-desc">Paste this once at the start of every AI session. It configures Claude or ChatGPT as your senior RP strategy advisor.</div>
+
+  <div class="sp-box">
+    <div class="sp-header">
+      <div class="sp-title">🧠 Master System Prompt — Copy & Paste Into AI</div>
+      <button class="copy-btn" onclick="copyById(this,'sp-content')">📋 Copy prompt</button>
+    </div>
+    <div class="sp-text" id="sp-content">Act as my Senior Strategic Customer Success Copilot at Red Points.
+
+You manage multi-million ARR enterprise accounts, focusing on:
+- Brand protection, anti-piracy, anti-counterfeit
+- Impersonation & domain protection  
+- Grey market & marketplace abuse
+
+Always provide:
+- Data-driven insights using RP terminology
+- Strategic recommendations with executive-ready wording
+- Risks + specific mitigation actions
+- Upsell opportunities with ARR impact estimate
+- Expected measurable outcomes
+
+Use Red Points logic: risk score, enforcement rate, monitoring scope, takedowns, economic impact.
+Always think in the pipeline: Detection → Assessment → Enforcement.
+
+When I share account data, structure your response as:
+1. KEY INSIGHT (1-2 sentences max)
+2. RISKS (bullet list with severity: HIGH / MEDIUM / LOW)
+3. RECOMMENDED ACTIONS (numbered, prioritised by ARR impact)
+4. UPSELL SIGNAL (if applicable)
+5. EXEC-READY SUMMARY (1 tight paragraph)
+
+Be proactive, structured, and always measurable.</div>
+  </div>
+
+  <div class="alert al-gold">
+    <div class="al-icon">💡</div>
+    <div class="al-text"><strong>Save it permanently:</strong> In Claude.ai → "Projects" → paste as project instructions. In ChatGPT → "Custom Instructions". This way it applies automatically to every new conversation without copy-pasting.</div>
+  </div>
+
+  <div class="trick">
+    <div class="tr-icon">🎯</div>
+    <div>
+      <div class="tr-title">Add your portfolio context immediately after</div>
+      <div class="tr-text">Right after the super prompt, add: <strong>"My portfolio has [N] accounts, [ARR]. Focus this week: [renewal/upsell/churn account name]."</strong> This anchors all responses to your actual situation.</div>
+    </div>
+  </div>
+  <div class="trick">
+    <div class="tr-icon">📊</div>
+    <div>
+      <div class="tr-title">Paste raw data — don't describe it</div>
+      <div class="tr-text">Copy-paste Looker tables, CSV rows, or Gong transcript excerpts directly. AI extracts patterns from raw data far better than from your description of it.</div>
+    </div>
+  </div>
+  <div class="trick">
+    <div class="tr-icon">🔄</div>
+    <div>
+      <div class="tr-title">Keep context alive in long sessions</div>
+      <div class="tr-text">If a conversation runs long, type: <strong>"Continue as my RP CSM advisor. Update: [new situation]."</strong> Prevents context drift without restarting the session.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ QUICKSTART ═══════════════ -->
+<div class="section" id="qs">
+  <div class="sec-tag">ONBOARDING</div>
+  <div class="sec-title">5-Minute Quickstart</div>
+  <div class="sec-desc">Go from zero to fully operational. Follow this exact sequence your first morning.</div>
+
+  <div class="workflow">
+    <div class="wf-step">
+      <div class="step-num">1</div>
+      <div>
+        <div class="step-title">Open Claude.ai (recommended) or ChatGPT</div>
+        <div class="step-text">Claude handles long documents, nuanced strategy, and sensitive account work better. Use ChatGPT for quick tasks when Claude is unavailable.</div>
+        <span class="step-time">⏱ 30 sec</span>
+      </div>
+    </div>
+    <div class="wf-step">
+      <div class="step-num">2</div>
+      <div>
+        <div class="step-title">Paste the Super Prompt</div>
+        <div class="step-text">Copy from the Setup section. Send it as your first message. The AI will confirm it's in CSM advisor mode and ready for your data.</div>
+        <span class="step-time">⏱ 1 min</span>
+      </div>
+    </div>
+    <div class="wf-step">
+      <div class="step-num">3</div>
+      <div>
+        <div class="step-title">Run the Daily Priority Planner</div>
+        <div class="step-text">Use prompt #3 from Daily Automation. Paste your account list with renewal dates and ESR. Get a ranked action list in 30 seconds.</div>
+        <span class="step-time">⏱ 2 min</span>
+      </div>
+    </div>
+    <div class="wf-step">
+      <div class="step-num">4</div>
+      <div>
+        <div class="step-title">Pick your top challenge for today</div>
+        <div class="step-text">Use the sidebar to jump directly to the right section. One challenge, one section, one prompt. Don't try to use everything at once.</div>
+        <span class="step-time">⏱ 1 min</span>
+      </div>
+    </div>
+    <div class="wf-step">
+      <div class="step-num">5</div>
+      <div>
+        <div class="step-title">Save your best outputs as reusable templates</div>
+        <div class="step-text">When a draft is excellent, save it with <strong>[TEMPLATE - ACCOUNT TYPE]</strong> in a Google Doc. Your personal RP prompt library compounds over time.</div>
+        <span class="step-time">⏱ 30 sec</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert al-teal">
+    <div class="al-icon">✅</div>
+    <div class="al-text"><strong>The golden rule:</strong> Never start from a blank page. Find a prompt in this toolkit → fill in your data → edit the output → ship. AI does 70% of the work. You add the strategic judgment that only you have.</div>
+  </div>
+</div>
+
+<!-- ═══════════════ DAILY ═══════════════ -->
+<div class="section" id="daily">
+  <div class="sec-tag">SECTION 2 — AUTOMATION</div>
+  <div class="sec-title">Daily Automation Engine</div>
+  <div class="sec-desc">Replace manual daily tasks with AI-powered workflows. Reclaim 2+ hours every day.</div>
+
+  <div class="alert al-red">
+    <div class="al-icon">⚡</div>
+    <div class="al-text"><strong>Morning ritual:</strong> Run prompt #1 and #3 before opening email every morning. They set your strategic frame in under 3 minutes.</div>
+  </div>
+
+  <div class="grid2">
+    <div class="pcard">
+      <div class="pc-num">#01 · DAILY BRIEFING</div>
+      <div class="pc-title">Executive Morning Briefing</div>
+      <div class="pc-prompt">Summarize the state of my portfolio, highlight anomalies, risks, and ARR opportunities. Flag anything needing action today. Portfolio: [paste account list with ESR, renewal dates, last contact]</div>
+      <div class="pc-tags"><span class="tag ti">Account list</span><span class="tag ti">KPI snapshot</span><span class="tag to">Daily dashboard</span><span class="tag tu">Run daily</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Summarize the state of my portfolio, highlight anomalies, risks, and ARR opportunities. Flag anything needing action today. Portfolio: [paste account list with ESR, renewal dates, last contact]')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#02 · KPI PULSE</div>
+      <div class="pc-title">KPI Health Check</div>
+      <div class="pc-prompt">Analyze these client KPIs: risk score, enforcement rate, monitoring scope, takedowns, economic impact. Identify what's trending wrong and why. Flag root causes, not symptoms. Data: [paste KPI table]</div>
+      <div class="pc-tags"><span class="tag ti">KPI export</span><span class="tag tt">Looker → CSV</span><span class="tag to">Risk signals + actions</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Analyze these client KPIs: risk score, enforcement rate, monitoring scope, takedowns, economic impact. Identify what\'s trending wrong and why. Flag root causes, not symptoms. Data: [paste KPI table]')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#03 · PRIORITY PLANNER</div>
+      <div class="pc-title">Top 5 Priorities by ARR Impact</div>
+      <div class="pc-prompt">Create my top 5 priorities today ranked by ARR impact + risk level. Flag urgent renewals, churn signals, and expansion blockers. Give me one specific action for each. Context: [paste portfolio with ARR, renewal date, ESR]</div>
+      <div class="pc-tags"><span class="tag ti">Portfolio view</span><span class="tag ti">Renewal pipeline</span><span class="tag to">Ranked to-do list</span><span class="tag tu">Morning ritual</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Create my top 5 priorities today ranked by ARR impact + risk level. Flag urgent renewals, churn signals, and expansion blockers. Give me one specific action for each. Context: [paste portfolio with ARR, renewal date, ESR]')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#04 · RENEWAL PREDICTOR</div>
+      <div class="pc-title">Renewal Likelihood Score</div>
+      <div class="pc-prompt">Predict renewal odds for [account] based on engagement, KPI trends, sentiment signals, and product adoption. Give a 0-100% probability score, the top 3 risk factors, and a 90-day action plan to improve odds.</div>
+      <div class="pc-tags"><span class="tag ti">KPI history</span><span class="tag ti">Meeting attendance</span><span class="tag to">Renewal score + plan</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Predict renewal odds for [account] based on engagement, KPI trends, sentiment signals, and product adoption. Give a 0-100% probability score, the top 3 risk factors, and a 90-day action plan to improve odds.')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#05 · PORTFOLIO RISK MAP</div>
+      <div class="pc-title">Portfolio Risk Assessment</div>
+      <div class="pc-prompt">Evaluate my portfolio and categorise each account as Low / Medium / High churn risk based on KPIs, renewal timeline, engagement, and recent signals. Output as a table with risk level, main risk factor, and one action per account. Accounts: [paste list]</div>
+      <div class="pc-tags"><span class="tag ti">Full portfolio</span><span class="tag ti">Renewal dates</span><span class="tag to">Risk map table</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Evaluate my portfolio and categorise each account as Low / Medium / High churn risk based on KPIs, renewal timeline, engagement, and recent signals. Output as a table with risk level, main risk factor, and one action per account. Accounts: [paste list]')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#06 · TIME OPTIMIZER</div>
+      <div class="pc-title">Time Allocation by ARR Impact</div>
+      <div class="pc-prompt">Based on my portfolio below, suggest how to allocate my 8 hours today to maximise ARR protection and revenue expansion. Rank accounts by urgency × ARR. Tell me what NOT to spend time on today. Portfolio: [list with ARR, risk tier, renewal date]</div>
+      <div class="pc-tags"><span class="tag ti">Portfolio + ARR</span><span class="tag ti">Risk tiers</span><span class="tag to">Time allocation plan</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Based on my portfolio below, suggest how to allocate my 8 hours today to maximise ARR protection and revenue expansion. Rank accounts by urgency × ARR. Tell me what NOT to spend time on today. Portfolio: [list with ARR, risk tier, renewal date]')">📋 Copy</button>
+    </div>
+  </div>
+
+  <div class="alert al-gold">
+    <div class="al-icon">💡</div>
+    <div class="al-text"><strong>Workflow hack:</strong> Keep a "Daily CSM Context" Google Doc with your portfolio list, KPI snapshots, and open risks. Paste it every morning — AI builds on yesterday's context. 5 minutes of setup saves 90 minutes of prep.</div>
+  </div>
+</div>
+
+<!-- ═══════════════ KPI ═══════════════ -->
+<div class="section" id="kpi">
+  <div class="sec-tag">SECTIONS 3–4 — DATA</div>
+  <div class="sec-title">KPI & Data Mastery</div>
+  <div class="sec-desc">Transform raw Looker exports into executive-ready insights that drive renewals and expansions.</div>
+
+  <h2>The 5 KPIs that matter most at Red Points</h2>
+  <div class="grid3">
+    <div class="plcard">
+      <div class="pl-icon">🎯</div><div class="pl-title">Risk Score</div>
+      <div class="pl-desc">Composite threat level. <strong style="color:var(--text)">Trending up = more exposure.</strong> Always show the trend line, not just the number. "Your risk score increased 18% MoM — here's what's driving it."</div>
+    </div>
+    <div class="plcard">
+      <div class="pl-icon">⚡</div><div class="pl-title">Enforcement Rate (ESR)</div>
+      <div class="pl-desc"><strong style="color:var(--text)">The headline metric.</strong> Below 70% = conversation needed. Above 90% = renewal ammunition. Show trajectory always. Below 50% = urgent escalation.</div>
+    </div>
+    <div class="plcard">
+      <div class="pl-icon">🌐</div><div class="pl-title">Monitoring Scope</div>
+      <div class="pl-desc">Coverage breadth. <strong style="color:var(--text)">Gaps = upsell signals.</strong> "You're not monitoring TikTok but 18% of your infringements are social. That's an unprotected vector."</div>
+    </div>
+    <div class="plcard">
+      <div class="pl-icon">🏆</div><div class="pl-title">Takedowns</div>
+      <div class="pl-desc">Volume of enforcements. The <strong style="color:var(--text)">most tangible win</strong> to show clients. "We removed 1,421 infringing listings in Q3." Always tie to economic impact.</div>
+    </div>
+    <div class="plcard">
+      <div class="pl-icon">💰</div><div class="pl-title">Economic Impact</div>
+      <div class="pl-desc">Estimated revenue saved. <strong style="color:var(--text)">This is what closes renewals.</strong> "We protected an estimated €2.3M in revenue." Use Looker economic model as baseline.</div>
+    </div>
+    <div class="plcard" style="border-color:rgba(232,40,26,.3);background:rgba(232,40,26,.03)">
+      <div class="pl-icon">🔄</div><div class="pl-title">Detection → Enforcement Funnel</div>
+      <div class="pl-desc"><strong style="color:var(--red)">The hidden insight.</strong> 10K detections + 100 enforcements = funnel problem, not detection problem. Always analyse conversion at each stage.</div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="pcard">
+      <div class="pc-num">#07 · PATTERN ANALYSIS</div>
+      <div class="pc-title">90-Day Infringement Pattern</div>
+      <div class="pc-prompt">Analyze these 90 days of infringements by platform, category, geography, seller networks, and severity. Identify trends, root causes, seasonal patterns, and 3 specific recommended actions. Data: [paste detection export]</div>
+      <div class="pc-tags"><span class="tag ti">90-day detection export</span><span class="tag to">Pattern insights + actions</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Analyze these 90 days of infringements by platform, category, geography, seller networks, and severity. Identify trends, root causes, seasonal patterns, and 3 specific recommended actions. Data: [paste detection export]')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#08 · ECONOMIC IMPACT</div>
+      <div class="pc-title">CFO-Ready ROI Narrative</div>
+      <div class="pc-prompt">Convert these enforcement numbers into an ROI narrative for a CFO audience. Include: avoided revenue loss estimate, enforcement volume, brand impact, and YoY comparison. No technical jargon. Max 3 paragraphs. Data: [paste impact numbers]</div>
+      <div class="pc-tags"><span class="tag ti">Economic impact data</span><span class="tag to">CFO ROI story</span><span class="tag tu">Use in QBR</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Convert these enforcement numbers into an ROI narrative for a CFO audience. Include: avoided revenue loss estimate, enforcement volume, brand impact, and YoY comparison. No technical jargon. Max 3 paragraphs. Data: [paste impact numbers]')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#09 · FUNNEL AUDIT</div>
+      <div class="pc-title">Detection → Enforcement Efficiency</div>
+      <div class="pc-prompt">Analyze the detection → assessment → enforcement funnel for [client]. Identify exactly where efficiency is being lost, quantify the gap, and recommend 3 specific fixes with expected ESR improvement. Funnel data: [paste breakdown]</div>
+      <div class="pc-tags"><span class="tag ti">Funnel breakdown</span><span class="tag ti">Time-to-enforce</span><span class="tag to">Efficiency improvement plan</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Analyze the detection → assessment → enforcement funnel for [client]. Identify exactly where efficiency is being lost, quantify the gap, and recommend 3 specific fixes with expected ESR improvement. Funnel data: [paste breakdown]')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#10 · BENCHMARK</div>
+      <div class="pc-title">Benchmark vs Peer Brands</div>
+      <div class="pc-prompt">Compare [client]'s KPIs vs similar brands in their vertical and marketplace exposure. Identify the 3 biggest performance gaps, explain why they exist, and recommend specific actions to close them. Client KPIs: [data]</div>
+      <div class="pc-tags"><span class="tag ti">Client KPIs</span><span class="tag tt">Looker benchmarking</span><span class="tag to">Gap analysis + actions</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Compare [client]\'s KPIs vs similar brands in their vertical and marketplace exposure. Identify the 3 biggest performance gaps, explain why they exist, and recommend specific actions to close them. Client KPIs: [data]')">📋 Copy</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ COMMS ═══════════════ -->
+<div class="section" id="comms">
+  <div class="sec-tag">SECTION 9 — COMMUNICATION</div>
+  <div class="sec-title">Communication Intelligence</div>
+  <div class="sec-desc">Every email, every message, every stakeholder conversation — done faster and smarter.</div>
+
+  <div class="alert al-teal">
+    <div class="al-icon">✍️</div>
+    <div class="al-text"><strong>The communication principle:</strong> Write for the person's <em>role</em>, not their name. VP → risk and strategic value. CFO → money saved. Platform user → workflow efficiency. Same data, different language. Always.</div>
+  </div>
+
+  <div class="grid2">
+    <div class="pcard">
+      <div class="pc-num">#11 · VP EMAIL</div>
+      <div class="pc-title">Executive Email (VP/Director)</div>
+      <div class="pc-prompt">Write a VP-level email for [client] summarising KPI progress, 2 key risks, and recommended next actions. Concise, strategic tone. Max 150 words. No bullet lists — flowing sentences. KPIs: [data]. Risks: [list]</div>
+      <div class="pc-tags"><span class="tag ti">KPIs + risks</span><span class="tag to">VP-level email</span><span class="tag tu">High impact</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Write a VP-level email for [client] summarising KPI progress, 2 key risks, and recommended next actions. Concise, strategic tone. Max 150 words. No bullet lists — flowing sentences. KPIs: [data]. Risks: [list]')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#12 · RENEWAL EMAIL</div>
+      <div class="pc-title">Renewal Negotiation Email</div>
+      <div class="pc-prompt">Write a strategic renewal email for [client] that addresses their objections with data-backed value evidence. Renewal date: [date]. Known objections: [list]. Top KPI wins: [data]. Lead with value delivered, close with a specific ask.</div>
+      <div class="pc-tags"><span class="tag ti">Objections</span><span class="tag ti">KPI wins</span><span class="tag to">Renewal email</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Write a strategic renewal email for [client] that addresses their objections with data-backed value evidence. Renewal date: [date]. Known objections: [list]. Top KPI wins: [data]. Lead with value delivered, close with a specific ask.')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#13 · GHOSTED CLIENT</div>
+      <div class="pc-title">Re-engagement Sequence (Ghosted)</div>
+      <div class="pc-prompt">Create a 3-message re-engagement sequence for [client] who stopped responding. Messages: spaced 5 days apart, progressively shorter, non-pushy. Last contact: [date]. Context: [situation]. Final message should offer an easy out to reduce friction.</div>
+      <div class="pc-tags"><span class="tag ti">Last touchpoint</span><span class="tag ti">Context</span><span class="tag to">3-message sequence</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Create a 3-message re-engagement sequence for [client] who stopped responding. Messages: spaced 5 days apart, progressively shorter, non-pushy. Last contact: [date]. Context: [situation]. Final message should offer an easy out to reduce friction.')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#14 · MEETING RECAP</div>
+      <div class="pc-title">Meeting Recap Generator</div>
+      <div class="pc-prompt">Turn these raw meeting notes into a clean structured recap: decisions made, action items with owners and deadlines, risks flagged, and next steps. Format for sharing with all attendees. Notes: [paste raw notes or Gong transcript]</div>
+      <div class="pc-tags"><span class="tag ti">Raw notes / Gong transcript</span><span class="tag to">Clean recap</span><span class="tag tp">Paste Gong directly</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Turn these raw meeting notes into a clean structured recap: decisions made, action items with owners and deadlines, risks flagged, and next steps. Format for sharing with all attendees. Notes: [paste raw notes or Gong transcript]')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#15 · ESCALATION MSG</div>
+      <div class="pc-title">Internal Escalation Message</div>
+      <div class="pc-prompt">Write a clear internal escalation for Ops/Product about [issue]. Include: severity (P1/P2/P3), client ARR at risk, business impact, what I've already tried, and specific support I need from the team. Issue: [describe]</div>
+      <div class="pc-tags"><span class="tag ti">Issue + impact</span><span class="tag to">Escalation summary</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Write a clear internal escalation for Ops/Product about [issue]. Include: severity (P1/P2/P3), client ARR at risk, business impact, what I\'ve already tried, and specific support I need from the team. Issue: [describe]')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#16 · SENSITIVE MSG</div>
+      <div class="pc-title">Sensitive Situation Message</div>
+      <div class="pc-prompt">Draft a professional message handling this sensitive situation: [describe]. Tone: calm, clear, no blame assigned. Audience: [role]. Goal: [maintain trust / solve issue / reset expectations]. Offer a concrete next step at the end.</div>
+      <div class="pc-tags"><span class="tag ti">Incident context</span><span class="tag ti">Stakeholder role</span><span class="tag to">Polished message</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Draft a professional message handling this sensitive situation: [describe]. Tone: calm, clear, no blame assigned. Audience: [role]. Goal: [maintain trust / solve issue / reset expectations]. Offer a concrete next step at the end.')">📋 Copy</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ CHURN ═══════════════ -->
+<div class="section" id="churn">
+  <div class="sec-tag">SECTIONS 6 & 14 — RISK</div>
+  <div class="sec-title">Churn Prevention & Risk Intelligence</div>
+  <div class="sec-desc">Detect churn before it happens. Build mitigation plans before it's too late. Protect ARR proactively.</div>
+
+  <h2>Early warning signals — know them cold</h2>
+  <div class="grid3">
+    <div class="plcard" style="border-color:rgba(232,40,26,.3)">
+      <div class="pl-icon">📉</div><div class="pl-title">KPI deterioration</div>
+      <div class="pl-desc">ESR drops 10%+ month-over-month. Enforcement volume declining. Risk score rising without corresponding action being taken.</div>
+    </div>
+    <div class="plcard" style="border-color:rgba(249,115,22,.3)">
+      <div class="pl-icon">👻</div><div class="pl-title">Engagement ghost patterns</div>
+      <div class="pl-desc">Missed QBRs. Unreturned emails for 10+ days. Drop in platform login activity. Shorter meetings. Single-word replies to detailed emails.</div>
+    </div>
+    <div class="plcard" style="border-color:rgba(212,168,67,.3)">
+      <div class="pl-icon">🏢</div><div class="pl-title">Org structure changes</div>
+      <div class="pl-desc">Champion leaves. New VP joins with different preferences. Budget owner changes. Reorg announcement. Watch LinkedIn for contact updates.</div>
+    </div>
+    <div class="plcard" style="border-color:rgba(139,92,246,.3)">
+      <div class="pl-icon">💬</div><div class="pl-title">Language signals</div>
+      <div class="pl-desc">"We're evaluating options", "our team is reviewing the contract", "what does the exit process look like?" — direct churn signals. Act immediately.</div>
+    </div>
+    <div class="plcard" style="border-color:rgba(232,40,26,.3)">
+      <div class="pl-icon">⚔️</div><div class="pl-title">Competitor mentions</div>
+      <div class="pl-desc">Any unprompted mention of a competitor tool. "We've been demoing X" or "another vendor told us..." — go to Crisis + Competitive Intel sections now.</div>
+    </div>
+    <div class="plcard" style="border-color:rgba(26,188,176,.3)">
+      <div class="pl-icon">💸</div><div class="pl-title">Budget pressure signals</div>
+      <div class="pl-desc">Layoffs announced, "we're optimising vendor spend", industry headwinds. Cross-reference your portfolio against industry news weekly.</div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="pcard">
+      <div class="pc-num">#17 · RISK SCAN</div>
+      <div class="pc-title">Early Warning Signal Scan</div>
+      <div class="pc-prompt">Review this account and identify all early warning signals for churn risk. Categorise each signal as HIGH / MEDIUM / LOW severity. Recommend one specific action for each signal. Account context: [paste data, notes, last meeting summary]</div>
+      <div class="pc-tags"><span class="tag ti">KPIs + engagement log</span><span class="tag ti">Recent notes</span><span class="tag to">Risk signal list</span><span class="tag tu">Weekly</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Review this account and identify all early warning signals for churn risk. Categorise each signal as HIGH / MEDIUM / LOW severity. Recommend one specific action for each signal. Account context: [paste data, notes, last meeting summary]')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#18 · MITIGATION PLAN</div>
+      <div class="pc-title">30-Day Risk Mitigation Plan</div>
+      <div class="pc-prompt">Build a 30-day mitigation plan for [account]. Include: specific weekly actions, owners for each action, and expected improvement per action. Known risks: [list]. Renewal date: [date]. Current ESR: [%]. ARR: [amount]</div>
+      <div class="pc-tags"><span class="tag ti">Risk signals</span><span class="tag ti">Renewal timeline</span><span class="tag to">Action plan with owners</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Build a 30-day mitigation plan for [account]. Include: specific weekly actions, owners for each action, and expected improvement per action. Known risks: [list]. Renewal date: [date]. Current ESR: [%]. ARR: [amount]')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#19 · VALUE EMAIL</div>
+      <div class="pc-title">Proactive Value Reinforcement Email</div>
+      <div class="pc-prompt">Draft a KPI-based value reminder email for [client] highlighting key wins, ROI milestones, and enforcement impact. Purpose: proactively reduce churn risk before the renewal conversation. Wins this period: [data]. Keep it under 120 words.</div>
+      <div class="pc-tags"><span class="tag ti">KPIs before/after</span><span class="tag ti">Economic impact</span><span class="tag to">Retention email</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Draft a KPI-based value reminder email for [client] highlighting key wins, ROI milestones, and enforcement impact. Purpose: proactively reduce churn risk before the renewal conversation. Wins this period: [data]. Keep it under 120 words.')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#20 · RESCUE PLAN</div>
+      <div class="pc-title">90-Day Renewal Rescue Plan</div>
+      <div class="pc-prompt">Build a 90-day renewal rescue plan for [account] at churn risk. Structure by month: Month 1 (stabilise), Month 2 (rebuild value), Month 3 (renew). Renewal date: [date]. Known issues: [list]. ARR: [amount]. Sentiment: [describe]</div>
+      <div class="pc-tags"><span class="tag ti">Renewal date + ARR</span><span class="tag ti">Risk signals</span><span class="tag to">Month-by-month rescue roadmap</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Build a 90-day renewal rescue plan for [account] at churn risk. Structure by month: Month 1 (stabilise), Month 2 (rebuild value), Month 3 (renew). Renewal date: [date]. Known issues: [list]. ARR: [amount]. Sentiment: [describe]')">📋 Copy</button>
+    </div>
+  </div>
+
+  <h2>The 2×2 priority matrix</h2>
+  <div class="matrix">
+    <div class="mx-cell mxh">← HIGH ARR</div><div class="mx-cell mxh">LOW ARR →</div>
+    <div class="mx-cell q1"><h4>🔴 DEFEND NOW</h4><ul><li>High ARR + high churn risk</li><li>Immediate exec call</li><li>Loop in CSM leadership</li><li>Weekly minimum touchpoint</li></ul></div>
+    <div class="mx-cell q2"><h4>🟠 MONITOR CLOSELY</h4><ul><li>Low ARR + high churn risk</li><li>Automate value reinforcement</li><li>Self-service + email sequence</li><li>Bi-weekly outreach</li></ul></div>
+    <div class="mx-cell q3"><h4>🟡 GROW</h4><ul><li>High ARR + low churn risk</li><li>Focus on expansion</li><li>QBR + upsell conversations</li><li>Build deeper champion network</li></ul></div>
+    <div class="mx-cell q4"><h4>⚪ AUTOMATE</h4><ul><li>Low ARR + low risk</li><li>Programmatic touchpoints</li><li>Monthly email sequences</li><li>Minimal CSM time investment</li></ul></div>
+  </div>
+</div>
+
+<!-- ═══════════════ EXPANSION ═══════════════ -->
+<div class="section" id="expansion">
+  <div class="sec-tag">SECTIONS 8 & 17 — GROWTH</div>
+  <div class="sec-title">Expansion Strategy Engine</div>
+  <div class="sec-desc">Turn coverage gaps into commercial opportunities. Build proposals executives actually approve.</div>
+
+  <div class="alert al-purple">
+    <div class="al-icon">🚀</div>
+    <div class="al-text"><strong>The expansion formula:</strong> Coverage gap + quantified exposure + economic impact estimate + competitive threat = irresistible proposal. Never pitch a module. Pitch the business problem it solves and the revenue at stake.</div>
+  </div>
+
+  <div class="grid2">
+    <div class="pcard">
+      <div class="pc-num">#21 · OPPORTUNITY SCAN</div>
+      <div class="pc-title">Top 3 Expansion Opportunities</div>
+      <div class="pc-prompt">Analyze [account] and identify the top 3 expansion opportunities. For each: quantify the unprotected exposure, estimate financial risk, and rate urgency (HIGH/MEDIUM/LOW). Base it on current modules vs infringement data. Data: [paste]</div>
+      <div class="pc-tags"><span class="tag ti">Current modules</span><span class="tag ti">Infringement data</span><span class="tag to">Ranked expansion list</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Analyze [account] and identify the top 3 expansion opportunities. For each: quantify the unprotected exposure, estimate financial risk, and rate urgency (HIGH/MEDIUM/LOW). Base it on current modules vs infringement data. Data: [paste]')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#22 · MODULE PROPOSAL</div>
+      <div class="pc-title">Executive Module Proposal</div>
+      <div class="pc-prompt">Write a strategic proposal recommending [module] for [client]. Use their KPIs, infringement trends, and coverage gaps as evidence. Include expected ROI and risk if they don't act. Executive-ready — no product jargon. Context: [paste]</div>
+      <div class="pc-tags"><span class="tag ti">Module target</span><span class="tag ti">Client pain points</span><span class="tag to">Executive proposal</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Write a strategic proposal recommending [module] for [client]. Use their KPIs, infringement trends, and coverage gaps as evidence. Include expected ROI and risk if they don\'t act. Executive-ready — no product jargon. Context: [paste]')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#23 · ROI PROJECTION</div>
+      <div class="pc-title">ROI Projection for Module Addition</div>
+      <div class="pc-prompt">Forecast the ROI of adding [module] to [client]'s setup. Use: current unprotected exposure volume, industry enforcement success rates, and their current economic impact baseline to project expected returns. Baseline: [data]</div>
+      <div class="pc-tags"><span class="tag ti">Impact baseline</span><span class="tag ti">Surface exposure</span><span class="tag to">Financial projection</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Forecast the ROI of adding [module] to [client]\'s setup. Use: current unprotected exposure volume, industry enforcement success rates, and their current economic impact baseline to project expected returns. Baseline: [data]')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#24 · EXEC EXPANSION EMAIL</div>
+      <div class="pc-title">Executive Expansion Email</div>
+      <div class="pc-prompt">Write an executive email to [role] at [client] about an expansion opportunity. Lead with business risk, not product. Show quantified exposure, competitive threat, and expected ROI. Close with one specific ask (30-min call). Context: [paste]</div>
+      <div class="pc-tags"><span class="tag ti">Stakeholder persona</span><span class="tag ti">Coverage gap data</span><span class="tag to">Executive email</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Write an executive email to [role] at [client] about an expansion opportunity. Lead with business risk, not product. Show quantified exposure, competitive threat, and expected ROI. Close with one specific ask (30-min call). Context: [paste]')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#25 · OBJECTION PREP</div>
+      <div class="pc-title">Upsell Objection Anticipation</div>
+      <div class="pc-prompt">Based on [client]'s budget signals, stakeholder profiles, and past objections, list the 5 most likely objections to the [module] expansion proposal. For each objection, give a data-backed counter-response. Known history: [describe]</div>
+      <div class="pc-tags"><span class="tag ti">Client history</span><span class="tag ti">Known concerns</span><span class="tag to">Objection handling list</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Based on [client]\'s budget signals, stakeholder profiles, and past objections, list the 5 most likely objections to the [module] expansion proposal. For each objection, give a data-backed counter-response. Known history: [describe]')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#26 · SOCIAL PITCH</div>
+      <div class="pc-title">Social Media Protection Pitch</div>
+      <div class="pc-prompt">Write a strategic pitch for adding Social Media Protection to [client]. Reference their specific social infringement data: fake accounts, fraudulent ads, impersonations. Quantify the exposure before offering the solution. Data: [paste social infringement data]</div>
+      <div class="pc-tags"><span class="tag ti">Social infringement data</span><span class="tag to">Module pitch</span><span class="tag tp">High close-rate pitch</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Write a strategic pitch for adding Social Media Protection to [client]. Reference their specific social infringement data: fake accounts, fraudulent ads, impersonations. Quantify the exposure before offering the solution. Data: [paste social infringement data]')">📋 Copy</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ QBR ═══════════════ -->
+<div class="section" id="qbr">
+  <div class="sec-tag">SECTION 16 — EBR/QBR</div>
+  <div class="sec-title">QBR / EBR Master Framework</div>
+  <div class="sec-desc">Build world-class quarterly reviews in minutes. Drive renewals and expansions from every meeting.</div>
+
+  <h2>The QBR structure that closes renewals</h2>
+  <div class="workflow">
+    <div class="wf-step">
+      <div class="step-num">1</div>
+      <div>
+        <div class="step-title">Open with the threat landscape — not your product</div>
+        <div class="step-text">Start with what's happening in their market: "Counterfeiting in [industry] grew 34% last quarter. Here's how it hit your category and what we caught." This anchors urgency before you show results.</div>
+      </div>
+    </div>
+    <div class="wf-step">
+      <div class="step-num">2</div>
+      <div>
+        <div class="step-title">Show the before → after transformation (3 numbers only)</div>
+        <div class="step-text">Infringements detected. Enforcements executed. Economic impact. Everything else in appendix. Executives remember 3 numbers, not 30 slides.</div>
+      </div>
+    </div>
+    <div class="wf-step">
+      <div class="step-num">3</div>
+      <div>
+        <div class="step-title">Flag the 2 biggest risks ahead</div>
+        <div class="step-text">Never leave a QBR without telling them what's coming. "In Q4, TikTok Shop infringements typically spike 40% for your category. We're preparing X." This is what separates advisors from vendors.</div>
+      </div>
+    </div>
+    <div class="wf-step">
+      <div class="step-num">4</div>
+      <div>
+        <div class="step-title">One focused expansion recommendation</div>
+        <div class="step-text">One module, specific data, clear ROI. Not a menu. A single recommendation with strong justification. Ask for the decision in the meeting — not "think about it."</div>
+      </div>
+    </div>
+    <div class="wf-step">
+      <div class="step-num">5</div>
+      <div>
+        <div class="step-title">Close with mutual commitments</div>
+        <div class="step-text">Both sides commit. "We will deliver X by [date]. You will connect us with [stakeholder] by [date]." End by sending the next QBR calendar invite before you hang up.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="pcard">
+      <div class="pc-num">#27 · FULL QBR NARRATIVE</div>
+      <div class="pc-title">Complete QBR Narrative Builder</div>
+      <div class="pc-prompt">Turn these KPIs and insights into a full QBR narrative: threat landscape opening, before/after transformation story, top 2 risks ahead, one expansion recommendation with ROI, and closing commitments. Executive audience. Data: [paste full QBR data pack]</div>
+      <div class="pc-tags"><span class="tag ti">Full KPI data pack</span><span class="tag tu">Pre-QBR</span><span class="tag to">Complete narrative script</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Turn these KPIs and insights into a full QBR narrative: threat landscape opening, before/after transformation story, top 2 risks ahead, one expansion recommendation with ROI, and closing commitments. Executive audience. Data: [paste full QBR data pack]')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#28 · EXEC SUMMARY SLIDE</div>
+      <div class="pc-title">QBR Executive Summary Slide</div>
+      <div class="pc-prompt">Create a QBR executive summary with: one headline KPI, one key win, one main risk, one strategic recommendation. Max 4 bullets total. Audience: [VP/Director]. This is the slide they remember. Data: [paste]</div>
+      <div class="pc-tags"><span class="tag ti">KPIs + wins + risks</span><span class="tag to">Exec summary (4 bullets max)</span><span class="tag tp">C-suite facing</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Create a QBR executive summary with: one headline KPI, one key win, one main risk, one strategic recommendation. Max 4 bullets total. Audience: [VP/Director]. This is the slide they remember. Data: [paste]')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#29 · ECONOMIC IMPACT SLIDE</div>
+      <div class="pc-title">Financial Impact Slide Copy</div>
+      <div class="pc-prompt">Write economic impact slide copy for [client]'s QBR. CFO-ready language: avoided losses, enforcement volume, estimated revenue protected, YoY comparison. Tell the financial story in 3 sentences + 3 numbers. Data: [paste impact data]</div>
+      <div class="pc-tags"><span class="tag ti">Impact data</span><span class="tag to">CFO-ready slide copy</span><span class="tag tu">Renewal-closing</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Write economic impact slide copy for [client]\'s QBR. CFO-ready language: avoided losses, enforcement volume, estimated revenue protected, YoY comparison. Tell the financial story in 3 sentences + 3 numbers. Data: [paste impact data]')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#30 · TALKING POINTS</div>
+      <div class="pc-title">Stakeholder Persona Talking Points</div>
+      <div class="pc-prompt">Create customised talking points for [list stakeholder roles] attending the QBR for [client]. For each persona: their #1 concern, the data point they'll care about most, and the question they're likely to ask. Account context: [paste]</div>
+      <div class="pc-tags"><span class="tag ti">Stakeholder list</span><span class="tag ti">Account context</span><span class="tag to">Per-persona talking points</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Create customised talking points for [list stakeholder roles] attending the QBR for [client]. For each persona: their #1 concern, the data point they\'ll care about most, and the question they\'re likely to ask. Account context: [paste]')">📋 Copy</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ STAKEHOLDER ═══════════════ -->
+<div class="section" id="stakeholder">
+  <div class="sec-tag">SECTION 18 — NAVIGATION</div>
+  <div class="sec-title">Stakeholder Navigation</div>
+  <div class="sec-desc">Map influence, build champions, neutralise blockers. The political game is part of the job.</div>
+
+  <div class="grid3">
+    <div class="plcard"><div class="pl-icon">🗺️</div><div class="pl-title">Power map first</div><div class="pl-desc">Before any strategic move, map who has power, who has interest, who influences the decision-maker. The org chart lies — find the real power structure.</div></div>
+    <div class="plcard"><div class="pl-icon">🏆</div><div class="pl-title">Invest in your champion</div><div class="pl-desc">Champions are built, not found. Give them wins, data they can present internally, and language that makes them look good to their boss. Their success = your renewal.</div></div>
+    <div class="plcard"><div class="pl-icon">🚧</div><div class="pl-title">Neutralise blockers strategically</div><div class="pl-desc">Don't fight blockers — understand their concern and reframe. A legal VP blocking an upsell is protecting their company. Show them RP protects their interests too.</div></div>
+    <div class="plcard"><div class="pl-icon">📡</div><div class="pl-title">Multi-thread always</div><div class="pl-desc">Single-threaded accounts die when that contact leaves. Build relationships at 3 levels: user, manager, executive. LinkedIn connections + internal intro requests.</div></div>
+    <div class="plcard"><div class="pl-icon">🎭</div><div class="pl-title">Different message per persona</div><div class="pl-desc">Legal: compliance. Brand: reputation. CFO: avoided losses. Ecom: operational efficiency. Same data, translated to each person's world. Always.</div></div>
+    <div class="plcard"><div class="pl-icon">⚡</div><div class="pl-title">New exec = 48-hour window</div><div class="pl-desc">When a new exec joins: reach out within 48 hours, send a "here's what we've done for your team" summary, request a call. Speed wins goodwill.</div></div>
+  </div>
+
+  <div class="grid2">
+    <div class="pcard">
+      <div class="pc-num">#31 · POWER MAP</div>
+      <div class="pc-title">Stakeholder Power Matrix</div>
+      <div class="pc-prompt">Turn this stakeholder list into a power/influence/interest matrix. For each contact identify: their role in the decision, sentiment toward RP, influence level, and whether they're a champion, neutral, or blocker. Contacts: [paste CRM contact list with roles]</div>
+      <div class="pc-tags"><span class="tag ti">Contact list + roles</span><span class="tag to">Power/influence matrix</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Turn this stakeholder list into a power/influence/interest matrix. For each contact identify: their role in the decision, sentiment toward RP, influence level, and whether they\'re a champion, neutral, or blocker. Contacts: [paste CRM contact list with roles]')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#32 · NEW EXEC PLAYBOOK</div>
+      <div class="pc-title">New Executive Engagement Plan</div>
+      <div class="pc-prompt">A new [role] joined [client]. They don't know RP's value yet. Create: a 48-hour outreach plan, the key value message to lead with for their persona, and what to send in the first email. Account history: [paste context]</div>
+      <div class="pc-tags"><span class="tag ti">New exec role</span><span class="tag ti">Account history</span><span class="tag to">48h engagement plan</span></div>
+      <button class="copy-btn" onclick="copyText(this,'A new [role] joined [client]. They don\'t know RP\'s value yet. Create: a 48-hour outreach plan, the key value message to lead with for their persona, and what to send in the first email. Account history: [paste context]')">📋 Copy</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ DISCOVERY ═══════════════ -->
+<div class="section" id="discovery">
+  <div class="sec-tag">SECTION 5 — DISCOVERY</div>
+  <div class="sec-title">Client Discovery & Intel</div>
+  <div class="sec-desc">Extract strategic gold from every first conversation. Build account DNA from day one.</div>
+
+  <div class="grid2">
+    <div class="pcard">
+      <div class="pc-num">#33 · DISCOVERY QUESTIONS</div>
+      <div class="pc-title">Strategic Discovery Question Generator</div>
+      <div class="pc-prompt">Generate 10 strategic discovery questions for a first call with [client] in the [industry] sector. Focus on uncovering: pain severity, budget signals, internal politics, current protection gaps, and decision process. Avoid product demos — this is intelligence gathering.</div>
+      <div class="pc-tags"><span class="tag ti">Industry vertical</span><span class="tag to">10 strategic questions</span><span class="tag tp">Pre-call prep</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Generate 10 strategic discovery questions for a first call with [client] in the [industry] sector. Focus on uncovering: pain severity, budget signals, internal politics, current protection gaps, and decision process. Avoid product demos — this is intelligence gathering.')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#34 · THREAT MAP</div>
+      <div class="pc-title">Brand Threat Landscape Mapping</div>
+      <div class="pc-prompt">Map [client]'s threat landscape across: marketplaces, social media, piracy channels, domains, grey market, and apps. Prioritise each threat by: exposure level, enforcement difficulty, and financial impact. Brand profile: [describe industry, products, current known threats]</div>
+      <div class="pc-tags"><span class="tag ti">Brand profile</span><span class="tag ti">Known surfaces</span><span class="tag to">Prioritised threat map</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Map [client]\'s threat landscape across: marketplaces, social media, piracy channels, domains, grey market, and apps. Prioritise each threat by: exposure level, enforcement difficulty, and financial impact. Brand profile: [describe industry, products, current known threats]')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#35 · CLIENT PROFILE</div>
+      <div class="pc-title">Account DNA Profile Builder</div>
+      <div class="pc-prompt">Create an executive-ready account profile for [client] covering: business model, threat landscape, internal team structure, brand protection maturity level (1-5), key success criteria, and recommended RP modules based on their profile. Sources: [paste discovery notes + website context]</div>
+      <div class="pc-tags"><span class="tag ti">Discovery notes</span><span class="tag ti">Website + CRM</span><span class="tag to">Complete account profile</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Create an executive-ready account profile for [client] covering: business model, threat landscape, internal team structure, brand protection maturity level (1-5), key success criteria, and recommended RP modules based on their profile. Sources: [paste discovery notes + website context]')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#36 · SUCCESS PLAN</div>
+      <div class="pc-title">Success Plan from Client Objectives</div>
+      <div class="pc-prompt">Turn these client stated objectives into a structured 6-month success plan with: measurable KPI targets, quarterly milestones, accountability matrix, and leading indicators for each goal. Goals stated: [list]. RP modules active: [list]</div>
+      <div class="pc-tags"><span class="tag ti">Client stated goals</span><span class="tag ti">Active modules</span><span class="tag to">6-month success plan</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Turn these client stated objectives into a structured 6-month success plan with: measurable KPI targets, quarterly milestones, accountability matrix, and leading indicators for each goal. Goals stated: [list]. RP modules active: [list]')">📋 Copy</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ CRISIS ═══════════════ -->
+<div class="section" id="crisis">
+  <div class="sec-tag">SECTION 19 — CRISIS</div>
+  <div class="sec-title">Crisis Leadership</div>
+  <div class="sec-desc">When something breaks, you become the calm in the storm. Execute these prompts in minutes, not hours.</div>
+
+  <div class="alert al-red">
+    <div class="al-icon">🚨</div>
+    <div class="al-text"><strong>Crisis rule #1:</strong> Communicate before they ask. Reach out proactively with context, impact, and recovery plan — before the client notices. Silence is the worst crisis communication strategy. Speed and transparency rebuild trust.</div>
+  </div>
+
+  <div class="grid2">
+    <div class="pcard">
+      <div class="pc-num">#37 · INCIDENT SUMMARY</div>
+      <div class="pc-title">Internal Incident Summary</div>
+      <div class="pc-prompt">Write an internal incident summary: what happened, business impact on [client], severity level (P1/P2/P3), ARR at risk, what I've done so far, and what I need from [team] in the next 2 hours. Incident: [describe in plain language]</div>
+      <div class="pc-tags"><span class="tag ti">Incident details</span><span class="tag ti">Impact scope</span><span class="tag to">Escalation summary</span><span class="tag tu">Use immediately</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Write an internal incident summary: what happened, business impact on [client], severity level (P1/P2/P3), ARR at risk, what I\'ve done so far, and what I need from [team] in the next 2 hours. Incident: [describe in plain language]')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#38 · CLIENT NOTICE</div>
+      <div class="pc-title">Client-Facing Incident Notification</div>
+      <div class="pc-prompt">Draft a proactive incident notification to [client] explaining: what happened (plain language), what the impact is on them specifically, what we're doing about it right now, and expected resolution timeline. Tone: calm, transparent, in control. Incident: [describe]</div>
+      <div class="pc-tags"><span class="tag ti">Incident + known impact</span><span class="tag to">Client notification</span><span class="tag tp">Send within 1 hour</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Draft a proactive incident notification to [client] explaining: what happened (plain language), what the impact is on them specifically, what we\'re doing about it right now, and expected resolution timeline. Tone: calm, transparent, in control. Incident: [describe]')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#39 · RCA EXEC VERSION</div>
+      <div class="pc-title">Root Cause Analysis (Executive Version)</div>
+      <div class="pc-prompt">Transform this technical RCA into an executive-readable summary. No technical jargon. Include: what happened in plain language, why it happened, business impact, steps already taken, and prevention plan. Audience: client VP. Technical RCA: [paste]</div>
+      <div class="pc-tags"><span class="tag ti">Technical RCA document</span><span class="tag to">Executive RCA — no jargon</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Transform this technical RCA into an executive-readable summary. No technical jargon. Include: what happened in plain language, why it happened, business impact, steps already taken, and prevention plan. Audience: client VP. Technical RCA: [paste]')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#40 · RENEWAL PROTECT</div>
+      <div class="pc-title">Renewal Protection After Crisis</div>
+      <div class="pc-prompt">Design a renewal protection plan for [account] after the recent [incident type]. Include: confidence rebuild actions for next 30 days, value evidence to reinforce before renewal, and concessions/offers if needed. Renewal: [date]. ARR: [amount]. Incident: [describe]</div>
+      <div class="pc-tags"><span class="tag ti">Incident summary</span><span class="tag ti">Renewal date + ARR</span><span class="tag to">Post-crisis renewal plan</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Design a renewal protection plan for [account] after the recent [incident type]. Include: confidence rebuild actions for next 30 days, value evidence to reinforce before renewal, and concessions/offers if needed. Renewal: [date]. ARR: [amount]. Incident: [describe]')">📋 Copy</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ COMPETITIVE ═══════════════ -->
+<div class="section" id="competitive">
+  <div class="sec-tag">SECTION 7 — BATTLECARDS</div>
+  <div class="sec-title">Competitive Intelligence</div>
+  <div class="sec-desc">Know when a competitor is in the room. Build battle cards that actually win renewal conversations.</div>
+
+  <div class="grid2">
+    <div class="pcard">
+      <div class="pc-num">#41 · BATTLECARD</div>
+      <div class="pc-title">Renewal Battlecard vs Competitor</div>
+      <div class="pc-prompt">Create a renewal battlecard for [client] to counter [competitor]. Include: top 3 RP differentiators for their use case, competitor's known weaknesses, data-backed rebuttals to their likely claims, and the one question to ask that makes competitor's weakness obvious. Context: [paste]</div>
+      <div class="pc-tags"><span class="tag ti">Competitor name</span><span class="tag ti">Client use case</span><span class="tag to">Battlecard</span><span class="tag tu">Pre-renewal</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Create a renewal battlecard for [client] to counter [competitor]. Include: top 3 RP differentiators for their use case, competitor\'s known weaknesses, data-backed rebuttals to their likely claims, and the one question to ask that makes competitor\'s weakness obvious. Context: [paste]')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#42 · WHY RP WINS</div>
+      <div class="pc-title">"Why Red Points" Value Narrative</div>
+      <div class="pc-prompt">Using [client]'s specific KPIs and enforcement outcomes, write a compelling narrative explaining why Red Points is the superior choice vs alternatives. Focus on measurable results they've already achieved — not product features. Keep it under 200 words. KPIs: [data]</div>
+      <div class="pc-tags"><span class="tag ti">Client KPIs + outcomes</span><span class="tag to">Value narrative</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Using [client]\'s specific KPIs and enforcement outcomes, write a compelling narrative explaining why Red Points is the superior choice vs alternatives. Focus on measurable results they\'ve already achieved — not product features. Keep it under 200 words. KPIs: [data]')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#43 · THREAT DETECTION</div>
+      <div class="pc-title">Competitive Threat Signal Scan</div>
+      <div class="pc-prompt">Analyze these emails and meeting notes for subtle signals that a competitor is influencing [client]'s renewal decision or sentiment. Flag: specific phrases to watch for, risk level (HIGH/MED/LOW), and recommended immediate action. Notes: [paste email threads / call notes]</div>
+      <div class="pc-tags"><span class="tag ti">Email threads + call notes</span><span class="tag to">Competitive threat alert</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Analyze these emails and meeting notes for subtle signals that a competitor is influencing [client]\'s renewal decision or sentiment. Flag: specific phrases to watch for, risk level (HIGH/MED/LOW), and recommended immediate action. Notes: [paste email threads / call notes]')">📋 Copy</button>
+    </div>
+
+    <div class="pcard">
+      <div class="pc-num">#44 · EXECUTIVE POSITIONING</div>
+      <div class="pc-title">EVP vs Competitor (Executive Level)</div>
+      <div class="pc-prompt">Create an executive value proposition for [client] comparing RP to [competitor] specific to their industry and KPIs. Audience: [VP/Legal/Brand Director]. Lead with their business outcomes, not product specs. Use their own data as evidence. Context: [paste]</div>
+      <div class="pc-tags"><span class="tag ti">Client KPIs + competitor</span><span class="tag ti">Stakeholder persona</span><span class="tag to">VP-ready EVP</span></div>
+      <button class="copy-btn" onclick="copyText(this,'Create an executive value proposition for [client] comparing RP to [competitor] specific to their industry and KPIs. Audience: [VP/Legal/Brand Director]. Lead with their business outcomes, not product specs. Use their own data as evidence. Context: [paste]')">📋 Copy</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PLAYBOOKS ═══════════════ -->
+<div class="section" id="playbooks">
+  <div class="sec-tag">MASTER PLAYBOOKS</div>
+  <div class="sec-title">CSM Playbooks</div>
+  <div class="sec-desc">Step-by-step guides for the highest-stakes CSM scenarios. Follow the sequence.</div>
+
+  <div class="acc">
+    <div class="acc-hdr" onclick="toggleAcc(this)">
+      <div class="acc-title"><span>🔴</span>The 90-Day Renewal Playbook</div>
+      <div class="acc-arr">▼</div>
+    </div>
+    <div class="acc-body">
+      <div class="workflow">
+        <div class="wf-step"><div class="step-num" style="font-size:10px;width:36px;border-radius:8px">D-90</div><div><div class="step-title">Internal prep</div><div class="step-text">Run KPI health check. Map all stakeholders. Identify top 3 value gaps and risks. Prepare "value story" with economic impact numbers. Flag to manager if ARR is above threshold. Use prompts #01, #05, #07.</div></div></div>
+        <div class="wf-step"><div class="step-num" style="font-size:10px;width:36px;border-radius:8px">D-75</div><div><div class="step-title">Proactive outreach to champion</div><div class="step-text">Email champion with QBR invite + preliminary value summary. Subject: "Preparing your Q[X] brand protection review — early preview." Do not mention renewal yet. Send using prompt #11.</div></div></div>
+        <div class="wf-step"><div class="step-num" style="font-size:10px;width:36px;border-radius:8px">D-60</div><div><div class="step-title">QBR / EBR delivery</div><div class="step-text">Run strategic review using the QBR framework. Lead with threat landscape, show economic impact, present one expansion recommendation. Confirm renewal intent verbally: "We're planning to continue — can we align on the paperwork?" Use prompts #27–#30.</div></div></div>
+        <div class="wf-step"><div class="step-num" style="font-size:10px;width:36px;border-radius:8px">D-45</div><div><div class="step-title">Formal renewal proposal</div><div class="step-text">Send value justification pack. Include: YoY comparison, economic impact, RP roadmap for next year, and proposed terms. Ask for decision by D-30. Use prompts #12 + #19.</div></div></div>
+        <div class="wf-step"><div class="step-num" style="font-size:10px;width:36px;border-radius:8px">D-30</div><div><div class="step-title">Decision follow-up</div><div class="step-text">If no response: phone call only, not email. Handle objections with battlecard (prompt #41). Escalate internally if ARR at risk — loop in manager or AE. Do not drop the urgency.</div></div></div>
+        <div class="wf-step"><div class="step-num" style="font-size:10px;width:36px;border-radius:8px">D-0</div><div><div class="step-title">Close + plan next cycle</div><div class="step-text">Confirm signature. Send thank-you + Q1 plan preview. Immediately send calendar invite for next QBR. Log all learnings in CRM. Start next 90-day cycle.</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="acc">
+    <div class="acc-hdr" onclick="toggleAcc(this)">
+      <div class="acc-title"><span>🚀</span>The Upsell Motion Playbook</div>
+      <div class="acc-arr">▼</div>
+    </div>
+    <div class="acc-body">
+      <div class="trick"><div class="tr-icon">1️⃣</div><div><div class="tr-title">Find the gap in detection data first</div><div class="tr-text">Look where infringements appear in data that RP <strong>doesn't currently cover</strong>. TikTok infringements without social module = perfect setup. Quantify the exposure before saying anything.</div></div></div>
+      <div class="trick"><div class="tr-icon">2️⃣</div><div><div class="tr-title">Quantify the exposure — show the number</div><div class="tr-text">"We detected 847 TikTok infringements last quarter that we couldn't enforce because it's outside scope." Make the gap visible and painful before offering the solution.</div></div></div>
+      <div class="trick"><div class="tr-icon">3️⃣</div><div><div class="tr-title">One recommendation, not a menu</div><div class="tr-text">Never present 3 expansion options. One prioritised recommendation + clear justification. Choice paralyses. Recommendation accelerates. Use prompt #22.</div></div></div>
+      <div class="trick"><div class="tr-icon">4️⃣</div><div><div class="tr-title">Ask for the meeting, not the close</div><div class="tr-text">CTA in proposal email: "Can we get 30 minutes to walk through the data?" — not "can you approve this?" Lower friction = higher conversion rate. Always.</div></div></div>
+      <div class="trick"><div class="tr-icon">5️⃣</div><div><div class="tr-title">Use QBR as the expansion moment</div><div class="tr-text">The expansion conversation closes faster when the client already feels the value. QBR = perfect moment. Show wins first, then the gap. Then the solution.</div></div></div>
+    </div>
+  </div>
+
+  <div class="acc">
+    <div class="acc-hdr" onclick="toggleAcc(this)">
+      <div class="acc-title"><span>🛡️</span>The Churn Rescue Playbook</div>
+      <div class="acc-arr">▼</div>
+    </div>
+    <div class="acc-body">
+      <div class="alert al-red" style="margin-bottom:14px"><div class="al-icon">⚠️</div><div class="al-text"><strong>Trigger this playbook when:</strong> Account missed 2+ meetings, KPIs declining 2+ months, negative sentiment expressed, or direct churn signal received.</div></div>
+      <div class="trick"><div class="tr-icon">🔍</div><div><div class="tr-title">Diagnose before you act</div><div class="tr-text">Run prompt #17 (Risk Scan) + prompt #20 (Rescue Plan). The actual problem is rarely what it looks like on the surface. Mis-diagnose = wrong solution.</div></div></div>
+      <div class="trick"><div class="tr-icon">📞</div><div><div class="tr-title">Phone call only — stop emailing</div><div class="tr-text">When a client is at churn risk, stop sending emails. Call directly. Email feels low-effort and gets ignored. A phone call signals you care and creates urgency.</div></div></div>
+      <div class="trick"><div class="tr-icon">🏢</div><div><div class="tr-title">Escalate to RP leadership if ARR &gt; threshold</div><div class="tr-text">Don't fight this alone. An executive-to-executive call from RP leadership to their leadership is often the pattern-interrupt needed to reset the relationship.</div></div></div>
+      <div class="trick"><div class="tr-icon">🎁</div><div><div class="tr-title">Give a win before asking for renewal</div><div class="tr-text">Before renewing the contract conversation, deliver something concrete: a custom analysis, a quick enforcement win, a feature they'd been waiting for. Give first. Renew second.</div></div></div>
+    </div>
+  </div>
+
+  <div class="acc">
+    <div class="acc-hdr" onclick="toggleAcc(this)">
+      <div class="acc-title"><span>🎤</span>The Executive Meeting Playbook</div>
+      <div class="acc-arr">▼</div>
+    </div>
+    <div class="acc-body">
+      <div class="trick"><div class="tr-icon">📋</div><div><div class="tr-title">Never enter without a 1-page brief</div><div class="tr-text">Use the "Internal Briefing Before Call" approach: account context, their priorities, current risks, your one ask. Know it cold. Use prompt #01 the morning of the meeting.</div></div></div>
+      <div class="trick"><div class="tr-icon">🎯</div><div><div class="tr-title">One ask per executive meeting</div><div class="tr-text">Every executive meeting ends with one specific ask: a decision, an introduction, a commitment. More than one ask = zero asks get completed. Decide your ask before the meeting starts.</div></div></div>
+      <div class="trick"><div class="tr-icon">📊</div><div><div class="tr-title">Lead with their business goal — not your product</div><div class="tr-text">Open: "You mentioned [goal X] was a priority last time — here's how Q[X] tracked against that." This shows you remembered, connected dots, and are thinking like a partner, not a vendor.</div></div></div>
+      <div class="trick"><div class="tr-icon">⏰</div><div><div class="tr-title">Leave 10 minutes for their questions</div><div class="tr-text">Never run out of time before the Q&A. Executives reveal their real concerns in questions. That's your intelligence for the next engagement and your upsell signal.</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ TOOLS ═══════════════ -->
+<div class="section" id="tools">
+  <div class="sec-tag">BONUS TRACK</div>
+  <div class="sec-title">AI Tools Stack for CSMs</div>
+  <div class="sec-desc">Free and low-cost tools that amplify CSM impact. Curated for Red Points workflows.</div>
+
+  <div class="grid3">
+    <a class="tool-card" href="https://claude.ai" target="_blank">
+      <div class="tc-cat">AI ASSISTANT</div><div class="tc-name">Claude.ai <span class="badge bt">Recommended</span></div>
+      <div class="tc-desc">Best for: long documents, QBR narratives, nuanced analysis, sensitive account strategy. Free tier is powerful enough for most CSM work.</div>
+    </a>
+    <a class="tool-card" href="https://chat.openai.com" target="_blank">
+      <div class="tc-cat">AI ASSISTANT</div><div class="tc-name">ChatGPT <span class="badge bv">Free</span></div>
+      <div class="tc-desc">Quick tasks, email drafts, fast analysis. Free GPT-4o mini handles daily CSM prompts well. Use for speed when precision matters less.</div>
+    </a>
+    <a class="tool-card" href="https://perplexity.ai" target="_blank">
+      <div class="tc-cat">RESEARCH</div><div class="tc-name">Perplexity AI <span class="badge bv">Free</span></div>
+      <div class="tc-desc">Real-time industry research for discovery prep, threat landscape context, competitive intel. Best web-searching AI available for free.</div>
+    </a>
+    <a class="tool-card" href="https://rows.com" target="_blank">
+      <div class="tc-cat">DATA ANALYSIS</div><div class="tc-name">Rows.com <span class="badge bg">Freemium</span></div>
+      <div class="tc-desc">AI spreadsheets that auto-analyse Looker exports. Turn raw KPI data into insight tables without writing formulas.</div>
+    </a>
+    <a class="tool-card" href="https://notta.ai" target="_blank">
+      <div class="tc-cat">DOCUMENTS</div><div class="tc-name">Notta AI <span class="badge bg">Freemium</span></div>
+      <div class="tc-desc">Summarises PDFs, long documents, contracts. Useful for quick client contract reviews or onboarding docs.</div>
+    </a>
+    <a class="tool-card" href="https://zapier.com" target="_blank">
+      <div class="tc-cat">AUTOMATION</div><div class="tc-name">Zapier <span class="badge bv">Free tier</span></div>
+      <div class="tc-desc">Automates repetitive workflows: log CRM notes, set renewal reminders, sync platform data. Free tier covers most CSM needs.</div>
+    </a>
+    <a class="tool-card" href="https://miro.com" target="_blank">
+      <div class="tc-cat">PLANNING</div><div class="tc-name">Miro AI <span class="badge bg">Freemium</span></div>
+      <div class="tc-desc">AI-powered mind maps for stakeholder mapping, account planning, and QBR structure planning. Visual thinking tool.</div>
+    </a>
+    <a class="tool-card" href="https://blaze.today" target="_blank">
+      <div class="tc-cat">PRODUCTIVITY</div><div class="tc-name">TextBlaze <span class="badge bv">Free</span></div>
+      <div class="tc-desc">Save your best email templates as shortcuts. Type /renewal and get your full renewal email template instantly. Saves hours weekly.</div>
+    </a>
+    <a class="tool-card" href="https://scribehow.com" target="_blank">
+      <div class="tc-cat">DOCUMENTATION</div><div class="tc-name">Scribe AI <span class="badge bv">Free</span></div>
+      <div class="tc-desc">Auto-generates step-by-step guides for client onboarding and internal processes. Record once, share forever.</div>
+    </a>
+  </div>
+
+  <div class="alert al-gold">
+    <div class="al-icon">⚡</div>
+    <div class="al-text"><strong>Best daily stack (zero cost):</strong> Claude.ai for analysis + TextBlaze for email templates + Perplexity for client research. Add Rows.com when you need to crunch Looker exports. Covers 90% of AI-assisted CSM work.</div>
+  </div>
+</div>
+
+<!-- ═══════════════ TRICKS ═══════════════ -->
+<div class="section" id="tricks">
+  <div class="sec-tag">MASTERY GUIDE</div>
+  <div class="sec-title">Tips, Tricks & Workarounds</div>
+  <div class="sec-desc">Hard-won techniques for getting elite results from AI in your CSM workflow.</div>
+
+  <h2>Prompt engineering for CSMs</h2>
+
+  <div class="trick">
+    <div class="tr-icon">🎭</div>
+    <div>
+      <div class="tr-title">Always define: role + audience + constraint</div>
+      <div class="tr-text">The best prompts define <strong>who you are</strong> (RP CSM), <strong>who reads the output</strong> (VP Legal / CFO / Brand Director), and <strong>the constraint</strong> (max 150 words / no jargon / executive tone). Without all three, AI gives generic output.</div>
+      <div class="tr-code">❌ "Write an email about the KPI results"
+✅ "Write a 130-word email to a VP of Legal at a luxury brand. Highlight 2 enforcement wins. Quantify economic impact. No technical jargon. Close with one specific ask."</div>
+    </div>
+  </div>
+
+  <div class="trick">
+    <div class="tr-icon">📊</div>
+    <div>
+      <div class="tr-title">Paste raw data — don't describe it</div>
+      <div class="tr-text">Instead of "last quarter we had 3,200 enforcements" — paste the actual Looker table. AI extracts patterns from raw data far better than from your description of it. CSV rows, copy-pasted Google Sheet tables, Gong transcript text all work.</div>
+    </div>
+  </div>
+
+  <div class="trick">
+    <div class="tr-icon">✂️</div>
+    <div>
+      <div class="tr-title">The "sharpen" command</div>
+      <div class="tr-text">After any output type: <strong>"Sharpen this — cut 30%, make it more direct, and add a stronger opening line."</strong> This single command turns a good draft into a great one. Works on emails, QBR narratives, and executive summaries every time.</div>
+    </div>
+  </div>
+
+  <div class="trick">
+    <div class="tr-icon">🎯</div>
+    <div>
+      <div class="tr-title">Ask for 3 versions, pick the best</div>
+      <div class="tr-text">For sensitive emails or renewal negotiations: <strong>"Give me 3 versions with different tones: assertive, collaborative, and empathetic."</strong> Then pick or blend. This is faster than editing one draft repeatedly.</div>
+    </div>
+  </div>
+
+  <div class="trick">
+    <div class="tr-icon">🧠</div>
+    <div>
+      <div class="tr-title">Use AI as a thinking partner, not just a writer</div>
+      <div class="tr-text">Before a hard conversation: <strong>"I need to tell [client] their ESR dropped 15% but it's not our fault. Walk me through how to frame this to preserve the relationship and turn it into an upsell trigger."</strong> Strategic coaching on demand.</div>
+    </div>
+  </div>
+
+  <div class="trick">
+    <div class="tr-icon">⚡</div>
+    <div>
+      <div class="tr-title">The executive translation workaround</div>
+      <div class="tr-text">Take any technical RP explanation and run: <strong>"Translate this for a CFO who has never heard of Red Points. One paragraph. Focus only on financial impact."</strong> Use for economic impact model, enforcement methodology, or detection algorithm explanations.</div>
+    </div>
+  </div>
+
+  <div class="trick">
+    <div class="tr-icon">🔍</div>
+    <div>
+      <div class="tr-title">Competitive research in 2 minutes with Perplexity</div>
+      <div class="tr-text">In Perplexity.ai: <strong>"What are the top complaints about [competitor] on G2 and Capterra in 2025? What do their customers say they wish was better?"</strong> Real ammunition for competitive conversations, sourced from verified reviews.</div>
+    </div>
+  </div>
+
+  <div class="trick">
+    <div class="tr-icon">📋</div>
+    <div>
+      <div class="tr-title">Build your personal prompt library</div>
+      <div class="tr-text">Keep a Google Doc called "My RP Prompt Library" with 10-15 prompts pre-filled with your typical context (your portfolio size, common client types, etc.). Update the variable parts only. Cuts prep time from 20 minutes to 90 seconds.</div>
+    </div>
+  </div>
+
+  <div class="div"></div>
+  <h2>The 3 biggest AI mistakes CSMs make</h2>
+
+  <div class="alert al-red">
+    <div class="al-icon">❌</div>
+    <div class="al-text"><strong>Sending AI output without reviewing it.</strong> AI doesn't know your client's relationship history, political context, or last week's conversation. Always review for accuracy, tone, and personal relevance before sending. You add the judgment.</div>
+  </div>
+  <div class="alert al-gold">
+    <div class="al-icon">⚠️</div>
+    <div class="al-text"><strong>Using AI numbers without verifying.</strong> AI hallucinates. If it generates economic impact calculations or benchmark comparisons, verify against Looker data. Use AI for framing, structure, and language — use RP data for the actual numbers.</div>
+  </div>
+  <div class="alert al-teal">
+    <div class="al-icon">✅</div>
+    <div class="al-text"><strong>The 80/20 rule:</strong> AI handles 80% of drafting, structure, and pattern recognition. You bring 20% — the client relationship context, the strategic judgment, the final editing. That 20% is your irreplaceable value.</div>
+  </div>
+</div>
+
+<!-- ═══════════════ CHEATSHEET ═══════════════ -->
+<div class="section" id="cheatsheet">
+  <div class="sec-tag">QUICK REFERENCE</div>
+  <div class="sec-title">Master Cheatsheet</div>
+  <div class="sec-desc">The entire toolkit on one page. Bookmark this tab and return whenever you're stuck.</div>
+
+  <h2>Situation → Right section → Right prompt</h2>
+  <table class="cs-table">
+    <thead><tr><th>Situation</th><th>Section</th><th>Prompt to use</th></tr></thead>
+    <tbody>
+      <tr><td>Planning my day</td><td>Daily Automation</td><td><code>Top 5 priorities by ARR × risk</code></td></tr>
+      <tr><td>Account feels at risk</td><td>Churn Prevention</td><td><code>Early warning scan + 30-day mitigation</code></td></tr>
+      <tr><td>QBR / EBR tomorrow</td><td>QBR Master</td><td><code>Full QBR narrative from KPI data pack</code></td></tr>
+      <tr><td>Need to write a VP email</td><td>Communication</td><td><code>Executive email: KPIs + risks + one ask</code></td></tr>
+      <tr><td>Client stopped responding</td><td>Communication</td><td><code>3-message re-engagement sequence</code></td></tr>
+      <tr><td>Renewal in 90 days</td><td>Churn + Expansion</td><td><code>90-day rescue plan + value justification pack</code></td></tr>
+      <tr><td>Upsell opportunity spotted</td><td>Expansion</td><td><code>Module proposal with ROI logic</code></td></tr>
+      <tr><td>Competitor mentioned</td><td>Competitive Intel</td><td><code>Battlecard + "Why RP wins" narrative</code></td></tr>
+      <tr><td>New exec joined client</td><td>Stakeholder Nav</td><td><code>New exec 48-hour engagement playbook</code></td></tr>
+      <tr><td>Something broke</td><td>Crisis Leadership</td><td><code>Incident summary → client notice → RCA exec</code></td></tr>
+      <tr><td>Looker data to interpret</td><td>KPI Mastery</td><td><code>Funnel audit + economic impact narrative</code></td></tr>
+      <tr><td>New client onboarding</td><td>Discovery</td><td><code>Threat map + success plan from objectives</code></td></tr>
+      <tr><td>CSM handover needed</td><td>Communication</td><td><code>Internal handover summary pack</code></td></tr>
+      <tr><td>Budget pressure signals</td><td>Churn</td><td><code>Value reinforcement email + ROI projection</code></td></tr>
+      <tr><td>Stakeholder mapping</td><td>Stakeholder Nav</td><td><code>Power / influence / interest matrix</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2>RP KPI quick reference</h2>
+  <table class="cs-table">
+    <thead><tr><th>KPI</th><th>Healthy target</th><th>Action if below</th></tr></thead>
+    <tbody>
+      <tr><td>Enforcement Rate (ESR)</td><td>&gt; 80%</td><td>Funnel audit → portal-first strategy → prompt #09</td></tr>
+      <tr><td>Risk Score trend</td><td>Stable or declining</td><td>Expand monitoring scope + investigate new surfaces</td></tr>
+      <tr><td>Economic Impact YoY</td><td>Growing</td><td>Expand marketplaces + increase detection rules coverage</td></tr>
+      <tr><td>Detection volume</td><td>Consistent MoM</td><td>Review keyword rules, add image-based detection</td></tr>
+      <tr><td>Assessment conversion</td><td>&gt; 70% of detections</td><td>Review alert quality, reduce false positive rate</td></tr>
+      <tr><td>Takedown velocity</td><td>&lt; 72h average</td><td>Portal-first + escalation for priority platforms</td></tr>
+      <tr><td>Client response rate</td><td>&gt; 80% within 48h</td><td>Simplify validation UX, build automation rules</td></tr>
+    </tbody>
+  </table>
+
+  <h2>The RP CSM golden rules</h2>
+  <div class="grid3">
+    <div class="plcard"><div class="pl-icon">🥇</div><div class="pl-title">Data first, opinion second</div><div class="pl-desc">Every recommendation must be grounded in RP data. "Our data shows..." always beats "I think..." in executive conversations.</div></div>
+    <div class="plcard"><div class="pl-icon">📅</div><div class="pl-title">Proactive beats reactive</div><div class="pl-desc">If you're responding to a client problem, you're already behind. Weekly portfolio scans prevent crises. Run prompt #05 every Monday.</div></div>
+    <div class="plcard"><div class="pl-icon">🎯</div><div class="pl-title">One metric, one story</div><div class="pl-desc">Pick the one KPI that tells the most powerful story in each conversation. Don't overwhelm with dashboards. Simplicity persuades.</div></div>
+    <div class="plcard"><div class="pl-icon">💰</div><div class="pl-title">Always translate to money</div><div class="pl-desc">Enforcement rates don't close renewals. "We protected €2.3M in revenue last year" does. Always convert metrics to economic impact.</div></div>
+    <div class="plcard"><div class="pl-icon">🤝</div><div class="pl-title">Relationship &gt; transaction</div><div class="pl-desc">The best renewals happen because the client trusts their CSM. That trust is built in the small moments — not just at QBR time.</div></div>
+    <div class="plcard"><div class="pl-icon">🔄</div><div class="pl-title">Iterate and compound</div><div class="pl-desc">Save what works, discard what doesn't. Build your personal prompt library. Your RP playbook compounds over time into an unfair advantage.</div></div>
+  </div>
+</div>
+
+</div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+function show(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const sec = document.getElementById(id);
+  if (sec) sec.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(item => {
+    if (item.getAttribute('onclick') && item.getAttribute('onclick').includes("'" + id + "'"))
+      item.classList.add('active');
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function copyText(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '📋 Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function copyById(btn, id) {
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '📋 Copy prompt'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function toggleAcc(hdr) {
+  hdr.classList.toggle('open');
+  const body = hdr.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+// Keyboard shortcut: press ? to go home
+document.addEventListener('keydown', e => {
+  if (e.key === '?' || (e.key === 'h' && e.ctrlKey)) show('home');
+});
+</script>
+</body>
+</html>
